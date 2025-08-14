@@ -3,7 +3,7 @@ import gspread
 from oauth2client.service_account import ServiceAccountCredentials
 import pandas as pd
 from datetime import datetime
-
+import os
 from utils.auth import login_required, logout_button
 
 # Autenticación obligatoria
