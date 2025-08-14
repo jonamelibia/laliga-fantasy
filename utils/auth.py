@@ -3,14 +3,20 @@ import streamlit as st
 USER = st.secrets["app"]["user"]
 PASS = st.secrets["app"]["password"]
 
-def login_required():
-    # Inicializar las claves necesarias de forma segura
-    if "logged_in" not in st.session_state:
-        st.session_state.logged_in = False
-    if "user" not in st.session_state:
-        st.session_state.user = None
+def init_session_state():
+    defaults = {
+        "logged_in": False,
+        "user": None,
+        "show_continue": False,
+    }
+    for key, value in defaults.items():
+        if key not in st.session_state:
+            st.session_state[key] = value
 
-    if not st.session_state.get("logged_in", False):
+def login_required():
+    init_session_state()  # inicializamos aquí, siempre que se llame
+
+    if not st.session_state.logged_in:
         st.title("🔑 Iniciar sesión")
         username = st.text_input("Usuario", key="login_user")
         password = st.text_input("Contraseña", type="password", key="login_pass")
@@ -23,14 +29,10 @@ def login_required():
             else:
                 st.error("❌ Usuario o contraseña incorrectos")
 
-        st.stop()  # Detiene la ejecución hasta hacer login
+        st.stop()
 
 def logout_button():
-    if "logged_in" not in st.session_state:
-        st.session_state.logged_in = False
-    if "user" not in st.session_state:
-        st.session_state.user = None
-
+    init_session_state()  # inicializamos aquí también
     if st.sidebar.button("Cerrar sesión"):
         st.session_state.logged_in = False
         st.session_state.user = None
