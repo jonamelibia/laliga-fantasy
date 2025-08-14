@@ -1,23 +1,22 @@
+# utils/auth.py
 import streamlit as st
 
 # --- Configuración de usuario y contraseña ---
-USER = st.secrets["app"]["user"]
-PASS = st.secrets["app"]["password"]
+def get_credentials():
+    return st.secrets["app"]["user"], st.secrets["app"]["password"]
 
 # --- Inicializar session_state de forma segura ---
 def init_session_state():
-    defaults = {
-        "logged_in": False,
-        "user": None,
-        "show_continue": False,
-    }
-    for key, value in defaults.items():
-        if key not in st.session_state:
-            st.session_state[key] = value
+    if "logged_in" not in st.session_state:
+        st.session_state.logged_in = False
+    if "user" not in st.session_state:
+        st.session_state.user = None
+    if "show_continue" not in st.session_state:
+        st.session_state.show_continue = False
 
 # --- Login obligatorio ---
 def login_required():
-    init_session_state()  # siempre inicializamos antes de usar
+    init_session_state()  # inicializar antes de usar
 
     if not st.session_state.logged_in:
         st.title("🔑 Iniciar sesión")
@@ -25,6 +24,7 @@ def login_required():
         password = st.text_input("Contraseña", type="password", key="login_pass")
 
         if st.button("Entrar"):
+            USER, PASS = get_credentials()
             if username == USER and password == PASS:
                 st.session_state.logged_in = True
                 st.session_state.user = username
@@ -32,11 +32,11 @@ def login_required():
             else:
                 st.error("❌ Usuario o contraseña incorrectos")
 
-        st.stop()  # detener ejecución hasta que haga login
+        st.stop()  # detener ejecución hasta login
 
 # --- Botón de logout ---
 def logout_button():
-    init_session_state()  # inicializamos también aquí
+    init_session_state()
     if st.sidebar.button("Cerrar sesión"):
         st.session_state.logged_in = False
         st.session_state.user = None
