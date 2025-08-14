@@ -30,3 +30,9 @@ def login_required():
             st.session_state.show_continue = False  # Oculta el botón al continuar
         else:
             st.stop()  # Bloquea hasta que se pulse "Continuar"
+def logout_button():
+    if st.sidebar.button("Cerrar sesión"):
+        st.session_state.logged_in = False
+        st.session_state.user = None
+        st.success("🔒 Has cerrado sesión correctamente")
+        st.stop()
