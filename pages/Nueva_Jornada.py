@@ -6,9 +6,14 @@ from datetime import datetime
 import os
 from utils.auth import login_required, logout_button
 
-# Autenticación obligatoria
+# --- Autenticación obligatoria ---
 login_required()
 logout_button()
+
+# --- Contenido de la página ---
+st.title("📊 Nueva Jornada")
+st.write(f"Usuario actual: {st.session_state.user}")
+
 
 # --- Configuración Google Sheets usando st.secrets ---
 # Debes crear en Streamlit Cloud un secreto llamado google_sheets
