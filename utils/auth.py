@@ -4,6 +4,7 @@ import streamlit as st
 # --- Configuración de usuario y contraseña ---
 def get_credentials():
     return st.secrets["app"]["user"], st.secrets["app"]["password"]
+st.session_state.logged_in = False
 
 # --- Inicializar session_state de forma segura ---
 def init_session_state():
