@@ -1,0 +1,39 @@
+# ~/.streamlit/config.toml
+[theme]
+primaryColor = "#E30613"
+backgroundColor = "#FFFFFF"
+secondaryBackgroundColor = "#F5F5F5"
+textColor = "#000000"
+font = "sans serif"
+
+# Colores de acento (barras, botones, etc.)
+[theme.accentColors]
+headerBackground = "#E30613"
+headerText = "#FFFFFF"
+buttonBackground = "#E30613"
+buttonText = "#FFFFFF"
+sliderTrackColor = "#E30613"
+sliderHandleColor = "#000000"
+checkboxActiveColor = "#E30613"
+
+# Sidebar
+[theme.sidebar]
+backgroundColor = "#000000"
+textColor = "#FFFFFF"
+headerTextColor = "#E30613"
+
+# Tablas
+[theme.table]
+headerBackgroundColor = "#E30613"
+headerTextColor = "#FFFFFF"
+rowBackgroundColor = "#FFFFFF"
+rowTextColor = "#000000"
+rowAlternateBackgroundColor = "#F5F5F5"
+
+# Inputs
+[theme.input]
+backgroundColor = "#FFFFFF"
+textColor = "#000000"
+borderColor = "#E30613"
+hoverBorderColor = "#000000"
+focusedBorderColor = "#E30613"
