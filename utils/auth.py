@@ -4,21 +4,22 @@ import streamlit as st
 # --- Configuración de usuario y contraseña ---
 def get_credentials():
     return st.secrets["app"]["user"], st.secrets["app"]["password"]
-st.session_state.logged_in = False
 
-# --- Inicializar session_state de forma segura ---
-def init_session_state():
+if "logged_in" not in st.session_state:
+    st.session_state.logged_in = False
+if "user" not in st.session_state:
+    st.session_state.user = None
+if "show_continue" not in st.session_state:
+    st.session_state.show_continue = False
+
+# --- Login obligatorio ---
+def login_required():
     if "logged_in" not in st.session_state:
         st.session_state.logged_in = False
     if "user" not in st.session_state:
         st.session_state.user = None
     if "show_continue" not in st.session_state:
         st.session_state.show_continue = False
-
-# --- Login obligatorio ---
-def login_required():
-    init_session_state()  # inicializar antes de usar
-
     if not st.session_state.logged_in:
         st.title("🔑 Iniciar sesión")
         username = st.text_input("Usuario", key="login_user")
