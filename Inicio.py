@@ -2,7 +2,6 @@ import streamlit as st
 import pandas as pd
 import plotly.express as px
 import numpy as np
-import base64
 
 st.set_page_config(page_title="Dashboard Fantasy Liga Española", layout="wide")
 
