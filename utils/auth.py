@@ -3,8 +3,10 @@ import streamlit as st
 USER = st.secrets["app"]["user"]
 PASS = st.secrets["app"]["password"]
 
-if "logged_in" not in st.session_state:
-    st.session_state.logged_in = False
+# Inicializar session_state de forma segura
+for key in ("logged_in", "show_continue", "user"):
+    if key not in st.session_state:
+        st.session_state[key] = False if key != "user" else None
 
 def login_required():
     if not st.session_state.logged_in:
@@ -16,15 +18,15 @@ def login_required():
             if username == USER and password == PASS:
                 st.session_state.logged_in = True
                 st.session_state.user = username
-                st.success(f"✅ Bienvenido, {username}, vuelva a pulsar el botón para continuar.")
+                st.session_state.show_continue = True
             else:
                 st.error("❌ Usuario o contraseña incorrectos")
+                st.session_state.show_continue = False
+        st.stop()  # Bloquear ejecución hasta login exitoso
 
-        st.stop()  # Evita que se ejecute el resto del script hasta hacer login
-
-def logout_button():
-    if st.sidebar.button("Cerrar sesión"):
-        st.session_state.logged_in = False
-        st.session_state.user = None
-        st.success("🔒 Has cerrado sesión correctamente")
-        st.stop()
+    # Una vez logueado, mostrar botón "Continuar" si no se ha pulsado aún
+    if st.session_state.show_continue:
+        if st.button("Continuar"):
+            st.session_state.show_continue = False  # Oculta el botón al continuar
+        else:
+            st.stop()  # Bloquea hasta que se pulse "Continuar"
