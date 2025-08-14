@@ -4,20 +4,11 @@ from oauth2client.service_account import ServiceAccountCredentials
 import pandas as pd
 from datetime import datetime
 import os
-from utils.auth import login_required, logout_button
 
-# --- Autenticación obligatoria ---
-login_required()
-logout_button()
+# --- Configuración ---
+APP_PASSWORD = st.secrets["app"]["password"]
 
-# --- Contenido de la página ---
-st.title("📊 Nueva Jornada")
-st.write(f"Usuario actual: {st.session_state.user}")
-
-
-# --- Configuración Google Sheets usando st.secrets ---
-# Debes crear en Streamlit Cloud un secreto llamado google_sheets
-# con las claves necesarias: project_id, private_key, client_email, client_id, etc.
+# --- Configuración Google Sheets ---
 gs_config = st.secrets["google_sheets"]
 
 credentials = {
@@ -36,7 +27,6 @@ credentials = {
 scope = ["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/drive"]
 creds = ServiceAccountCredentials.from_json_keyfile_dict(credentials, scope)
 client = gspread.authorize(creds)
-
 sheet = client.open_by_key(gs_config["google_spreadsheet_id"]).sheet1
 
 # --- Lista de jugadores ---
@@ -89,32 +79,46 @@ def guardar_csv_local():
 # --- UI ---
 st.title("Registro de Jornada - Fantasy Liga Española")
 
-num_jornada = st.number_input("Número de Jornada", min_value=1, step=1)
+# --- Formulario de nueva jornada ---
+with st.form("form_jornada"):
+    num_jornada = st.number_input("Número de Jornada", min_value=1, step=1)
 
-puntos_jugadores = []
-for j in jugadores:
-    puntos = st.number_input(f"Puntos de {j}", min_value=0, step=1)
-    puntos_jugadores.append({"jugador": j, "puntos": puntos})
+    puntos_jugadores = []
+    for j in jugadores:
+        puntos = st.number_input(f"Puntos de {j}", min_value=0, step=1)
+        puntos_jugadores.append({"jugador": j, "puntos": puntos})
 
-if st.button("Guardar Jornada"):
-    todas = sheet.get_all_records()
-    if any(int(r["num_jornada"]) == num_jornada for r in todas):
-        st.toast(f"La jornada {num_jornada} ya existe.", icon="⚠️")
-    else:
-        resultados = calcular_multas_y_posiciones(puntos_jugadores)
-        fecha = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        for r in resultados:
-            sheet.append_row([
-                num_jornada,
-                r["jugador"],
-                r["puntos"],
-                r["posicion"],
-                r["multa"],
-                fecha,
-                st.session_state.user
-            ])
-        guardar_csv_local()
-        st.toast(f"Jornada {num_jornada} guardada correctamente y copia local actualizada.", icon="✅")
+    password_input = st.text_input("Contraseña", type="password")
+    submitted = st.form_submit_button("Guardar Jornada")
 
-if st.button("Actualizar CSV local desde Google Sheets"):
-    guardar_csv_local()
+    if submitted:
+        if password_input != APP_PASSWORD:
+            st.error("❌ Contraseña incorrecta")
+        else:
+            todas = sheet.get_all_records()
+            if any(int(r["num_jornada"]) == num_jornada for r in todas):
+                st.toast(f"La jornada {num_jornada} ya existe.", icon="⚠️")
+            else:
+                resultados = calcular_multas_y_posiciones(puntos_jugadores)
+                fecha = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+                for r in resultados:
+                    sheet.append_row([
+                        num_jornada,
+                        r["jugador"],
+                        r["puntos"],
+                        r["posicion"],
+                        r["multa"],
+                        fecha,
+                        "Admin"
+                    ])
+                guardar_csv_local()
+                st.toast(f"Jornada {num_jornada} guardada correctamente y copia local actualizada.", icon="✅")
+
+# --- Actualizar CSV local (también con contraseña) ---
+with st.expander("Actualizar CSV local desde Google Sheets"):
+    update_password = st.text_input("Ingrese contraseña para actualizar CSV", type="password", key="update_pass")
+    if st.button("Actualizar CSV", key="update_csv_btn"):
+        if update_password != APP_PASSWORD:
+            st.error("❌ Contraseña incorrecta")
+        else:
+            guardar_csv_local()

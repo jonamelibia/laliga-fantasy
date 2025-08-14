@@ -32,6 +32,7 @@ colores_jugadores = ["#E30613", "#000000", "#555555", "#FF4500", "#1E90FF", "#32
 color_map = {jugador: colores_jugadores[i] for i, jugador in enumerate(jugadores)}
 
 # --- KPIs por jugador ---
+
 st.header("Puntuación total")
 kpi_data = []
 for jugador in jugadores:
