@@ -62,8 +62,7 @@ def calcular_multas_y_posiciones(lista):
     return resultados
 
 def multa_por_posicion(pos):
-    if pos == 3: return "0.5"
-    elif pos == 4: return 1
+    if pos == 4: return 1
     elif pos == 5: return 2
     elif pos == 6: return 3
     else: return 0
