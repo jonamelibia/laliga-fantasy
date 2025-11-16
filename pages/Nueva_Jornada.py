@@ -74,6 +74,8 @@ def guardar_csv_local():
         os.makedirs("data/")
     df_final.to_csv("data/data_local.csv", index=False, decimal=".", float_format="%.2f", sep=";")
     st.toast("CSV local actualizado desde Google Sheets.", icon="💾")
+    st.session_state["refresh_data"] = st.session_state.get("refresh_data", 0) + 1
+
 
 # --- UI ---
 st.title("Registro de Jornada - Fantasy Liga Española")

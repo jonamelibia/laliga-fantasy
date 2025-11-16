@@ -2,6 +2,7 @@ import streamlit as st
 import pandas as pd
 import plotly.express as px
 import numpy as np
+from utils.get_gc_data import obtener_datos
 
 st.set_page_config(page_title="Dashboard Fantasy Liga Española", layout="wide")
 
@@ -18,7 +19,7 @@ st.markdown(f"""
  
 # --- Leer CSV local ---
 try:
-    df = pd.read_csv("data/data_local.csv", sep=';', decimal='.')
+    df = obtener_datos(refresh=st.session_state.get("refresh_data", False))
 except FileNotFoundError:
     st.warning("No se ha encontrado el CSV local. Guarda primero alguna jornada.")
     st.stop()
@@ -33,7 +34,7 @@ color_map = {jugador: colores_jugadores[i] for i, jugador in enumerate(jugadores
 
 # --- KPIs por jugador ---
 
-st.header("Puntuación total")
+st.header("Puntuación total J{jornada}".format(jornada=df["num_jornada"].max()))
 kpi_data = []
 for jugador in jugadores:
     df_j = df[df["jugador"] == jugador]
@@ -91,35 +92,122 @@ kpi3.metric("Promedio de puntos por jornada", f"{media_j['puntos'].mean():.2f} p
 st.header("Evolución y acumulados detallados")
 
 # Fila 1: Evolución de puntos y multas
-row1_col1, row1_col2 = st.columns(2)
-with row1_col1:
-    fig_pts_evol = px.line(df, x="num_jornada", y="puntos", color="jugador", markers=True,
-                           title="Evolución de puntos por jugador", color_discrete_map=color_map)
-    fig_pts_evol.update_layout(plot_bgcolor="white", paper_bgcolor="white", font_color="#000000")
-    st.plotly_chart(fig_pts_evol, use_container_width=True)
+# === GRAFICOS ===
 
-with row1_col2:
-    df_multas_j = df.groupby(["num_jornada", "jugador"])["multa"].sum().reset_index()
-    fig_multas_evol = px.line(df_multas_j, x="num_jornada", y="multa", color="jugador", markers=True,
-                              title="Evolución de multas", color_discrete_map=color_map)
-    fig_multas_evol.update_layout(plot_bgcolor="white", paper_bgcolor="white", font_color="#000000")
-    st.plotly_chart(fig_multas_evol, use_container_width=True)
+# --- 1. Evolución de puntos ---
+fig_pts_evol = px.line(
+    df,
+    x="num_jornada",
+    y="puntos",
+    color="jugador",
+    markers=True,
+    title="Evolución de puntos",
+    color_discrete_map=color_map
+)
+fig_pts_evol.update_layout(plot_bgcolor="white", paper_bgcolor="white", font_color="#000000")
+st.plotly_chart(fig_pts_evol, use_container_width=True)
 
-# Fila 2: Acumulado puntos y multas
-row2_col1, row2_col2 = st.columns(2)
-with row2_col1:
-    df_acum_puntos = df.groupby("jugador")["puntos"].sum().reset_index().sort_values(by="puntos", ascending=False)
-    fig_acum_puntos = px.bar(df_acum_puntos, x="jugador", y="puntos", text="puntos",
-                             title="Acumulado de puntos", color="jugador", color_discrete_map=color_map)
-    fig_acum_puntos.update_layout(plot_bgcolor="white", paper_bgcolor="white", font_color="#000000")
-    st.plotly_chart(fig_acum_puntos, use_container_width=True)
+# --- 2. Acumulado de puntos ---
+df["pts_acum"] = df.groupby("jugador")["puntos"].cumsum()
 
-with row2_col2:
-    df_acum_multas = df.groupby("jugador")["multa"].sum().reset_index().sort_values(by="multa", ascending=False)
-    fig_acum_multas = px.bar(df_acum_multas, x="jugador", y="multa", text="multa",
-                             title="Acumulado de multas", color="jugador", color_discrete_map=color_map)
-    fig_acum_multas.update_layout(plot_bgcolor="white", paper_bgcolor="white", font_color="#000000")
-    st.plotly_chart(fig_acum_multas, use_container_width=True)
+fig_acum_puntos = px.line(
+    df,
+    x="num_jornada",
+    y="pts_acum",
+    markers=True,
+    title="Acumulado de puntos",
+    color="jugador",
+    color_discrete_map=color_map
+)
+fig_acum_puntos.update_layout(plot_bgcolor="white", paper_bgcolor="white", font_color="#000000")
+st.plotly_chart(fig_acum_puntos, use_container_width=True)
+
+# --- 3. Evolución de posición total a lo largo del tiempo ---
+fig_pos_evol = px.line(
+    df,
+    x="num_jornada",
+    y="posicion",
+    color="jugador",
+    markers=True,
+    title="Evolución de la posición en la clasificación",
+    color_discrete_map=color_map
+)
+fig_pos_evol.update_layout(
+    yaxis_autorange="reversed",   # porque 1 es mejor que 10
+    plot_bgcolor="white",
+    paper_bgcolor="white",
+    font_color="#000000"
+)
+st.plotly_chart(fig_pos_evol, use_container_width=True)
+
+# --- 4. Posición por jornada (boxplot o scatter) ---
+# Si quieres ver la variabilidad de cada jugador por jornada
+# 1. Ordenamos por jornada
+df_sorted = df.sort_values(["num_jornada"])
+
+# 2. Calculamos puntos acumulados por jugador
+df_sorted["puntos_acum"] = df_sorted.groupby("jugador")["puntos"].cumsum()
+
+# 3. Para cada jornada, ordenamos y asignamos posición general
+df_clasificacion = (
+    df_sorted
+    .groupby("num_jornada", group_keys=True)
+    .apply(lambda d: d.assign(
+        posicion_general=d["puntos_acum"].rank(method="dense", ascending=False).astype(int)
+    ))
+    .reset_index(drop=True)
+)
+fig_pos_jornada = px.line(
+    df_clasificacion,
+    x="num_jornada",
+    y="posicion_general",
+    color="jugador",
+    markers=True,
+    title="Posición por jornada",
+    color_discrete_map=color_map
+)
+fig_pos_jornada.update_layout(
+    yaxis_autorange="reversed",
+    plot_bgcolor="white",
+    paper_bgcolor="white",
+    font_color="#000000"
+)
+st.plotly_chart(fig_pos_jornada, use_container_width=True)
+
+# --- 5. Evolución acumulada de multas ---
+df["multa_acum"] = df.groupby("jugador")["multa"].cumsum()
+
+fig_multas_acum = px.line(
+    df,
+    x="num_jornada",
+    y="multa_acum",
+    color="jugador",
+    markers=True,
+    title="Evolución acumulada de multas",
+    color_discrete_map=color_map
+)
+fig_multas_acum.update_layout(plot_bgcolor="white", paper_bgcolor="white", font_color="#000000")
+st.plotly_chart(fig_multas_acum, use_container_width=True)
+
+# --- 6. Multas por jornada ---
+df_multas_j = (
+    df.groupby(["num_jornada", "jugador"])["multa"]
+    .sum()
+    .reset_index()
+)
+
+fig_multas_jornada = px.bar(
+    df_multas_j,
+    x="num_jornada",
+    y="multa",
+    color="jugador",
+    title="Multas por jornada",
+    barmode="group",
+    color_discrete_map=color_map
+)
+fig_multas_jornada.update_layout(plot_bgcolor="white", paper_bgcolor="white", font_color="#000000")
+st.plotly_chart(fig_multas_jornada, use_container_width=True)
+
 
 # Fila 3: Media puntos con desviación y distribución
 # --- Última fila de gráficos ---
