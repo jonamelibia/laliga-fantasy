@@ -3,7 +3,7 @@
 [![Streamlit App](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](https://myfantasy.streamlit.app/)
 ![LALIGA Logo](https://fantasy.laliga.com/assets/images/logo_fantasy.png)
 
-A high-performance, premium-designed Streamlit dashboard for **LALIGA Fantasy** enthusiasts. This project transforms raw player data into a professional sports broadcasting experience, featuring advanced analytics, real-time standings, and automated fine tracking.
+A high-performance, premium-designed Streamlit dashboard for our **Amigos Fantasy League**. This project transforms our player data into a professional sports broadcasting experience, featuring advanced analytics, real-time standings, and automated fine tracking for our group.
 
 **🚀 Live Application:** [myfantasy.streamlit.app](https://myfantasy.streamlit.app/)
 
@@ -70,4 +70,4 @@ A high-performance, premium-designed Streamlit dashboard for **LALIGA Fantasy** 
 ![Header Section](file:///Users/jonamelibia/.gemini/antigravity/brain/b1810a63-7be8-4754-956b-cd091deecb3c/sidebar_and_headers_verification_1766482044031.png)
 
 ---
-*Created with ❤️ for the Fantasy Community.*
+*Created with ❤️ for the Genuines - Amigos Fantasy League.*

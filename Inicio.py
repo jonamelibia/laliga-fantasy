@@ -177,7 +177,7 @@ with tab4:
 st.markdown("""
 <div class="custom-footer">
     ⚽ LALIGA GENUINE MOEVE | FANTASY DASHBOARD v2.0 PREMIUM<br>
-    © 2025 Estadísticas Avanzadas para la Comunidad Fantasy
+    © 2025 Estadísticas Avanzadas para la Liga de Amigos
 </div>
 """, unsafe_allow_html=True)
 
