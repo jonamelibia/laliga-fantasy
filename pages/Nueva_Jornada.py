@@ -1,9 +1,32 @@
 import streamlit as st
+from utils.styles import apply_custom_style
+
+st.set_page_config(
+    page_title="LALIGA Fantasy - Registro", 
+    layout="wide", 
+    page_icon="⚽",
+    initial_sidebar_state="collapsed"
+)
+
+# --- Apply Custom CSS ---
+apply_custom_style()
+
+# --- Sidebar ---
+st.sidebar.image("https://fantasy.laliga.com/assets/images/logo_fantasy.png", use_container_width=True)
+st.sidebar.markdown("---")
+
 import gspread
 from oauth2client.service_account import ServiceAccountCredentials
 import pandas as pd
 from datetime import datetime
 import os
+
+# --- Header ---
+col_logo, col_title = st.columns([1, 8])
+with col_logo:
+    st.image("https://assets.laliga.com/assets/logos/laliga-genuine/LALIGA_GENUINE_Moeve_RGB_positivo/LALIGA_GENUINE_Moeve_RGB_positivo.png", width=80)
+with col_title:
+    st.title("REGISTRO DE JORNADA")
 
 # --- Configuración ---
 APP_PASSWORD = st.secrets["app"]["password"]
