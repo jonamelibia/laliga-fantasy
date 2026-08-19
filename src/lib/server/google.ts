@@ -12,7 +12,7 @@ type DriveInstance = ReturnType<typeof google.drive>['v3'];
 let _sheets: SheetsInstance | null = null;
 let _drive: DriveInstance | null = null;
 
-const CACHE_TTL = 30_000;
+const CACHE_TTL = 5 * 60_000;
 const _cache: Map<string, { data: unknown; ts: number }> = new Map();
 
 function cacheGet<T>(key: string): T | null {
@@ -106,13 +106,18 @@ let _baseSheetsEnsured = false;
 
 async function ensureBaseSheets() {
   if (_baseSheetsEnsured) return;
+  if (cacheGet<boolean>('baseSheets')) { _baseSheetsEnsured = true; return; }
   await ensureSheetExists(SHEET_CONFIG, ['key', 'value']);
   await ensureSheetExists(SHEET_USUARIOS, ['jugador', 'displayName', 'photoUrl', 'password', 'isAdmin']);
   await ensureJornadasSheet();
   _baseSheetsEnsured = true;
+  cacheSet('baseSheets', true);
 }
 
 export async function getTemporadas(): Promise<string[]> {
+  const cached = cacheGet<string[]>('temporadas');
+  if (cached) return cached;
+
   await ensureBaseSheets();
   const sheets = getSheets();
 
@@ -131,13 +136,18 @@ export async function getTemporadas(): Promise<string[]> {
       if (temp) seasons.add(temp);
     }
 
-    return Array.from(seasons).sort().reverse();
+    const result = Array.from(seasons).sort().reverse();
+    cacheSet('temporadas', result);
+    return result;
   } catch {
     return [];
   }
 }
 
 export async function getCurrentSeason(): Promise<string> {
+  const cached = cacheGet<string>('currentSeason');
+  if (cached) return cached;
+
   await ensureBaseSheets();
   const sheets = getSheets();
   const res = await sheets.values.get({
@@ -147,11 +157,16 @@ export async function getCurrentSeason(): Promise<string> {
 
   const rows = res.data.values || [];
   for (const row of rows) {
-    if (row[0] === 'currentSeason') return row[1] || '';
+    if (row[0] === 'currentSeason') {
+      cacheSet('currentSeason', row[1] || '');
+      return row[1] || '';
+    }
   }
 
   const temporadas = await getTemporadas();
-  return temporadas[0] || '';
+  const result = temporadas[0] || '';
+  cacheSet('currentSeason', result);
+  return result;
 }
 
 export async function setCurrentSeason(temporada: string): Promise<void> {
@@ -189,6 +204,7 @@ export async function setCurrentSeason(temporada: string): Promise<void> {
   }
 
   cacheInvalidate('config');
+  cacheInvalidate('currentSeason');
 }
 
 export async function createSeason(temporada: string): Promise<void> {
@@ -224,6 +240,7 @@ export async function createSeason(temporada: string): Promise<void> {
 
   cacheInvalidate(`scores:${temporada}`);
   cacheInvalidate('sheetNames');
+  cacheInvalidate('temporadas');
 }
 
 export async function readPuntuaciones(temporada: string): Promise<Record<string, Record<number, number>>> {
