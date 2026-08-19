@@ -21,16 +21,40 @@ export const actions: Actions = {
     const displayName = formData.get('displayName') as string;
     const password = formData.get('password') as string;
     const isAdmin = formData.get('isAdmin') === 'on';
+    const photoBase64 = formData.get('photoBase64') as string;
 
     if (!jugador) return fail(400, { error: 'Jugador requerido' });
 
     try {
-      await updateUsuario(jugador, {
-        displayName: displayName || undefined,
-        password: password || undefined,
-        isAdmin
-      });
+      const updates: { displayName?: string; password?: string; isAdmin?: boolean; photoUrl?: string } = {};
+      if (displayName) updates.displayName = displayName;
+      if (password) updates.password = password;
+      updates.isAdmin = isAdmin;
+      if (photoBase64 && photoBase64.startsWith('data:image')) {
+        if (photoBase64.length > 50000) {
+          return fail(400, { error: 'La imagen es demasiado grande' });
+        }
+        updates.photoUrl = photoBase64;
+      }
+      await updateUsuario(jugador, updates);
       return { success: true, message: `${displayName || jugador} actualizado` };
+    } catch (e) {
+      return fail(500, { error: 'Error: ' + String(e) });
+    }
+  },
+
+  updateUsuarioPhoto: async ({ request, locals }) => {
+    if (!locals.user) return fail(403, { error: 'No autorizado' });
+
+    const formData = await request.formData();
+    const jugador = formData.get('jugador') as string;
+    const photoUrl = formData.get('photoUrl') as string;
+
+    if (!jugador) return fail(400, { error: 'Jugador requerido' });
+
+    try {
+      await updateUsuario(jugador, { photoUrl: photoUrl || '' });
+      return { success: true, message: 'Foto actualizada' };
     } catch (e) {
       return fail(500, { error: 'Error: ' + String(e) });
     }

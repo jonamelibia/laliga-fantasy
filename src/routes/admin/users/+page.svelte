@@ -8,21 +8,74 @@
   let editDisplayName = $state('');
   let editPassword = $state('');
   let editIsAdmin = $state(false);
+  let editPhotoChanged = $state(false);
+  let editPhotoPreview = $state('');
   let showAdd = $state(false);
   let newJugador = $state('');
   let newDisplayName = $state('');
   let newPassword = $state('');
   let lastMessage = $state<{ type: string; text: string } | null>(null);
 
-  function startEdit(u: { jugador: string; displayName: string; password: string; isAdmin: boolean }) {
+  function startEdit(u: { jugador: string; displayName: string; password: string; isAdmin: boolean; photoUrl: string }) {
     editing = u.jugador;
     editDisplayName = u.displayName;
     editPassword = '';
     editIsAdmin = u.isAdmin;
+    editPhotoChanged = false;
+    editPhotoPreview = u.photoUrl || '';
   }
 
   function cancelEdit() {
     editing = null;
+  }
+
+  function handleEditPhotoSelect(e: Event) {
+    const input = e.target as HTMLInputElement;
+    const file = input.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = (ev) => {
+        const img = new Image();
+        img.onload = () => {
+          const maxPx = 200;
+          let w = img.width;
+          let h = img.height;
+          if (w > maxPx || h > maxPx) {
+            const ratio = Math.min(maxPx / w, maxPx / h);
+            w = Math.round(w * ratio);
+            h = Math.round(h * ratio);
+          }
+          const canvas = document.createElement('canvas');
+          canvas.width = w;
+          canvas.height = h;
+          const ctx = canvas.getContext('2d')!;
+          ctx.drawImage(img, 0, 0, w, h);
+          editPhotoPreview = canvas.toDataURL('image/jpeg', 0.7);
+          editPhotoChanged = true;
+        };
+        img.src = ev.target?.result as string;
+      };
+      reader.readAsDataURL(file);
+    }
+  }
+
+  async function handleDeleteUserPhoto(jugador: string) {
+    try {
+      const fd = new FormData();
+      fd.set('jugador', jugador);
+      fd.set('photoUrl', '');
+      const res = await fetch('?/updateUsuarioPhoto', { method: 'POST', body: fd });
+      const result = await res.json();
+      if (result.type === 'success') {
+        lastMessage = { type: 'success', text: 'Foto eliminada' };
+        editing = null;
+        await invalidateAll();
+        setTimeout(() => { lastMessage = null; }, 3000);
+      }
+    } catch {
+      lastMessage = { type: 'error', text: 'Error al eliminar foto' };
+      setTimeout(() => { lastMessage = null; }, 5000);
+    }
   }
 
   $effect(() => {
@@ -115,8 +168,8 @@
           {#if editing === u.jugador}
             <tr class="editing-row">
               <td>
-                {#if u.photoUrl}
-                  <img src={u.photoUrl} alt="" class="avatar" />
+                {#if editPhotoPreview}
+                  <img src={editPhotoPreview} alt="" class="avatar" />
                 {:else}
                   <div class="avatar-placeholder">{u.displayName?.charAt(0) || u.jugador.charAt(0)}</div>
                 {/if}
@@ -126,16 +179,21 @@
                 <form
                   method="POST"
                   action="?/updateUsuario"
+                  enctype="multipart/form-data"
                   use:enhance={() => {
                     return async ({ result }) => {
                       if (result.type === 'success') {
                         editing = null;
+                        editPhotoChanged = false;
                         await invalidateAll();
                       }
                     };
                   }}
                 >
                   <input type="hidden" name="jugador" value={u.jugador} />
+                  {#if editPhotoChanged}
+                    <input type="hidden" name="photoBase64" value={editPhotoPreview} />
+                  {/if}
                   <div class="edit-form">
                     <input type="text" name="displayName" class="input" bind:value={editDisplayName} placeholder="Nombre" />
                     <input type="text" name="password" class="input" bind:value={editPassword} placeholder="Nueva contraseña (vacío = no cambiar)" />
@@ -143,6 +201,15 @@
                       <input type="checkbox" name="isAdmin" bind:checked={editIsAdmin} />
                       Admin
                     </label>
+                    <label class="btn btn-outline btn-sm photo-upload-btn">
+                      Foto
+                      <input type="file" accept="image/*" onchange={handleEditPhotoSelect} style="display:none;" />
+                    </label>
+                    {#if editPhotoPreview}
+                      <button type="button" class="btn btn-outline btn-sm delete-photo-btn" onclick={() => handleDeleteUserPhoto(u.jugador)}>
+                        Borrar Foto
+                      </button>
+                    {/if}
                     <button type="submit" class="btn btn-primary btn-sm">Guardar</button>
                     <button type="button" class="btn btn-outline btn-sm" onclick={cancelEdit}>Cancelar</button>
                   </div>
@@ -500,6 +567,21 @@
     accent-color: var(--red, #AA151B);
     width: 15px;
     height: 15px;
+  }
+
+  .photo-upload-btn {
+    cursor: pointer;
+  }
+
+  .delete-photo-btn {
+    color: var(--red-bright, #E30613);
+    border-color: rgba(227, 6, 19, 0.3);
+  }
+
+  .delete-photo-btn:hover {
+    background: rgba(227, 6, 19, 0.1);
+    border-color: rgba(227, 6, 19, 0.5);
+    color: #fff;
   }
 
   @media (max-width: 768px) {

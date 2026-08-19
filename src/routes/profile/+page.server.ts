@@ -83,5 +83,16 @@ export const actions: Actions = {
     } catch (e) {
       return fail(500, { error: 'Error al subir foto: ' + String(e) });
     }
+  },
+
+  deletePhoto: async ({ locals }) => {
+    if (!locals.user) return fail(401, { error: 'No autorizado' });
+
+    try {
+      await updateUsuario(locals.user.jugador, { photoUrl: '' });
+      return { success: true, message: 'Foto eliminada', photoUrl: '' };
+    } catch (e) {
+      return fail(500, { error: 'Error al eliminar foto: ' + String(e) });
+    }
   }
 };

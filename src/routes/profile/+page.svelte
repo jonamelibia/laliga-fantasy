@@ -50,6 +50,30 @@
     }
   }
 
+  async function handleDeletePhoto() {
+    uploading = true;
+    try {
+      const formData = new FormData();
+      const res = await fetch('?/deletePhoto', { method: 'POST', body: formData });
+      const result = await res.json();
+      if (result.type === 'success') {
+        photoPreview = '';
+        photoChanged = false;
+        lastMessage = { type: 'success', text: 'Foto eliminada' };
+        await invalidateAll();
+        setTimeout(() => { lastMessage = null; }, 3000);
+      } else {
+        lastMessage = { type: 'error', text: 'Error al eliminar foto' };
+        setTimeout(() => { lastMessage = null; }, 5000);
+      }
+    } catch {
+      lastMessage = { type: 'error', text: 'Error de conexión' };
+      setTimeout(() => { lastMessage = null; }, 5000);
+    } finally {
+      uploading = false;
+    }
+  }
+
   $effect(() => {
     if (form?.success) {
       lastMessage = { type: 'success', text: form.message || 'Guardado' };
@@ -118,9 +142,19 @@
                 style="display: none;"
               />
             </label>
-            <button type="submit" class="btn btn-primary" disabled={uploading || !photoPreview}>
+            <button type="submit" class="btn btn-primary" disabled={uploading || !photoChanged}>
               {uploading ? 'Subiendo...' : 'Subir'}
             </button>
+            {#if data.profile.photoUrl}
+              <button
+                type="button"
+                class="btn btn-outline delete-btn"
+                onclick={handleDeletePhoto}
+                disabled={uploading}
+              >
+                Eliminar Foto
+              </button>
+            {/if}
           </div>
         </form>
 
@@ -288,6 +322,17 @@
 
   .upload-btn {
     cursor: pointer;
+  }
+
+  .delete-btn {
+    color: var(--red-bright, #E30613);
+    border-color: rgba(227, 6, 19, 0.3);
+  }
+
+  .delete-btn:hover {
+    background: rgba(227, 6, 19, 0.1);
+    border-color: rgba(227, 6, 19, 0.5);
+    color: #fff;
   }
 
   .photo-info {
