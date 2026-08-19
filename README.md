@@ -1,73 +1,46 @@
-# ⚽ LALIGA Fantasy | Premium Stats Dashboard
+# Fantasy Liga Española
 
-[![Streamlit App](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](https://myfantasy.streamlit.app/)
-![LALIGA Logo](https://fantasy.laliga.com/assets/images/logo_fantasy.png)
+Aplicación web para gestionar una liga privada de Fantasy La Liga entre amigos.
 
-A high-performance, premium-designed Streamlit dashboard for our **Amigos Fantasy League**. This project transforms our player data into a professional sports broadcasting experience, featuring advanced analytics, real-time standings, and automated fine tracking for our group.
+## Stack
 
-**🚀 Live Application:** [myfantasy.streamlit.app](https://myfantasy.streamlit.app/)
+- **Framework:** [SvelteKit](https://kit.svelte.dev/)
+- **Deploy:** [Vercel](https://vercel.com/)
+- **Backend:** Google Sheets API
+- **Charts:** Chart.js
+- **Package Manager:** Bun
 
-## ✨ Features
+## Funcionalidades
 
-- **🏆 Custom Leaderboard**: A bespoke HTML/CSS classification table with rank badges and sports-grade typography.
-- **🛡️ Safety Analytics**: Unique "Media Seguridad" metric that calculates the average points needed to avoid fines (3rd place threshold).
-- **📉 Advanced Visualization Tabs**:
-  - **Evolution**: Historical and cumulative points tracking.
-  - **Positions**: Dynamic rank history across all matchdays.
-  - **Sanctions**: Full-width cumulative fines time-series.
-  - **Consistency**: Boxplot distributions to analyze player stability.
-- **🎨 Premium UI/UX**:
-  - **LaLiga Light Theme**: Crisp off-white background with official Red/Coral accents.
-  - **Dark Sidebar**: Professional high-contrast navigation.
-  - **Glassmorphism**: Elegant card components with subtle blur and shadow effects.
+- **Dashboard:** Clasificación general, gráficos de evolución, puntos acumulados, multas por jornada
+- **Admin CRUD:** Matriz editable de puntuaciones (jugadores × jornadas) con guardado masivo
+- **Gestión de Usuarios:** Perfil con nombre, foto de perfil (subida a Google Drive), contraseña
+- **Autenticación:** Login por contraseña con cookies httpOnly
 
-## 🛠️ Technology Stack
+## Estructura de Google Sheets
 
-- **Frontend**: [Streamlit](https://streamlit.io/) (Python-based interactive UI)
-- **Data Engine**: [Pandas](https://pandas.pydata.org/) & [NumPy](https://numpy.org/)
-- **Visuals**: [Plotly Express](https://plotly.com/python/plotly-express/)
-- **Storage**: Google Sheets Integration (via `gspread`)
-- **Styling**: Custom CSS Injection (Vanilla CSS)
+### Pestaña "Puntuaciones"
+Matriz donde filas = jugadores, columnas = jornadas (J1 a J38).
 
-## 🚀 Getting Started
+### Pestaña "Usuarios"
+Columnas: jugador, displayName, photoUrl, password, isAdmin
 
-### Prerequisites
+## Desarrollo
 
-- Python 3.9+
-- Google Cloud Service Account (for Sheets API)
+```bash
+bun install
+bun run dev
+```
 
-### Installation
+## Variables de Entorno
 
-1. **Clone the repository**:
-   ```bash
-   git clone https://github.com/your-username/laliga-fantasy.git
-   cd laliga-fantasy
-   ```
+Copia `.env.example` a `.env` y configura:
 
-2. **Install dependencies**:
-   ```bash
-   pip install -r requirements.txt
-   ```
+- `GOOGLE_SERVICE_ACCOUNT_JSON`: JSON del service account de Google
+- `SPREADSHEET_ID`: ID del Google Spreadsheet
 
-3. **Configure Secrets**:
-   Create a `.streamlit/secrets.toml` file with your credentials:
-   ```toml
-   APP_PASSWORD = "your-password"
-   
-   [gcp_service_account]
-   type = "service_account"
-   project_id = "..."
-   ...
-   ```
+## Deploy en Vercel
 
-4. **Run the Dashboard**:
-   ```bash
-   streamlit run Inicio.py
-   ```
-
-## 📸 Dashboard Preview
-
-![Header Section](file:///Users/jonamelibia/.gemini/antigravity/brain/b1810a63-7be8-4754-956b-cd091deecb3c/sidebar_and_headers_verification_1766482044031.png)
-
----
-*Created with ❤️ for the Genuines - Amigos Fantasy League.*
+1. Conectar el repositorio a Vercel
+2. Configurar las variables de entorno en el dashboard de Vercel
+3. Deploy automático al hacer push a `main`
